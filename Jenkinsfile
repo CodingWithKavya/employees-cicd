@@ -1,6 +1,6 @@
 node {
   stage('SCM') {
-    git 'https://github.com/CodingWithKavya/health-api.git'
+    git 'https://github.com/CodingWithKavya/employees-cicd.git'
   }
   stage('SonarCloud analysis') {
     withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') { // You can override the credential to be used
