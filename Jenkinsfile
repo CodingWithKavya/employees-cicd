@@ -1,123 +1,38 @@
+def projectKey = 'codingwithkavya' // Replace with your SonarCloud project key
+def branch = env.BRANCH_NAME ?: 'main' // Use branch name from environment or default to 'master'
+def gitUrl = 'https://github.com/CodingWithKavya/employees-cicd.git' // Replace with your Git repository URL
 
 pipeline {
-    agent any
-    tools {
+  agent any
+  tools {
         maven 'maven-3.9.6'
     }
 
-    stages {
-        stage('Git Checkout') {
-            steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/thomassharun/employees-cicd.git']])
-                echo 'Git Checkout Completed'
-            }
-        }
-        stage('Maven Build') {
-            steps {
-                sh 'mvn clean package -DskipTests'
-                echo 'Maven build Completed'
-            }
-        }
-        stage('JUnit Test') {
-            steps {
-                // Run Junit tests
-                script {
-                    try {
-                        sh 'mvn clean test surefire-report:report' 
-                        //junit 'src/reports/*-jupiter.xml'
-                    } catch (err) {
-                        currentBuild.result = 'FAILURE'
-                        echo 'Unit tests failed!'
-                        error 'Unit tests failed!'
-                    }
-                }
-                echo 'JUnit test Completed'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''mvn clean verify sonar:sonar -Dsonar.projectKey=cicd-full -Dsonar.projectName='cicd-full' -Dsonar.host.url=http://localhost:9000''' //port 9000 is default for sonar
-                    echo 'SonarQube Analysis Completed'
-                }
-            }
-        }
-        stage('Copy artifacts to EC2') {
-            steps {
-                sshPublisher(
-                    publishers: [
-                        sshPublisherDesc(
-                            configName: 'ansible-server',
-                            transfers: [
-                                sshTransfer(
-                                    cleanRemote: false,
-                                    excludes: '',
-                                    execCommand: '',
-                                    execTimeout: 120000,
-                                    flatten: false,
-                                    makeEmptyDirs: false,
-                                    noDefaultExcludes: false,
-                                    patternSeparator: '[, ]+',
-                                    remoteDirectory: '//opt//deploy-sharun',
-                                    remoteDirectorySDF: false,
-                                    removePrefix: 'target',
-                                    sourceFiles: 'target/*.jar'
-                                )
-                            ],
-                            usePromotionTimestamp: false,
-                            useWorkspaceInPromotion: false,
-                            verbose: false
-                        )
-                    ]
-                )
-            }
-        }
-        stage('Deploy') {
-            steps {
-                sshPublisher(
-                    publishers: [
-                        sshPublisherDesc(
-                            configName: 'ansible-server',
-                            transfers: [
-                                sshTransfer(
-                                    cleanRemote: false,
-                                    excludes: '',
-                                    execCommand: '''
-                                        cd /opt/deploy-sharun/
-                                        ansible-playbook start_container.yml
-                                    ''',
-                                    execTimeout: 120000,
-                                    flatten: false,
-                                    makeEmptyDirs: false,
-                                    noDefaultExcludes: false,
-                                    patternSeparator: '[, ]+',
-                                    remoteDirectory: '',
-                                    remoteDirectorySDF: false,
-                                    removePrefix: '',
-                                    sourceFiles: ''
-                                )
-                            ],
-                            usePromotionTimestamp: false,
-                            useWorkspaceInPromotion: false,
-                            verbose: false
-                        )
-                    ]
-                )
-            }
-        }
-
+  stages {
+    stage('Checkout Code') {
+      steps {
+        bat "git checkout ${branch} && git pull origin ${branch}" // Use bat for Windows commands
+      }
     }
-    post {
-        failure {
-            // This block will execute if any of the previous stages fail, including unit tests
-            echo 'One or more stages have failed!'
-            echo 'Pipeline Aborted'
+    
+    stage('Code Analysis') {
+      steps {
+        script {
+          // Define SonarCloud server URL and token as Jenkins job environment variables
+          environment {
+            SONAR_HOST_URL = 'https://sonarcloud.io'
+            SONAR_TOKEN = '$sonarcloud' // Reference token from credential
+          }
+
+          // Define additional SonarCloud properties (optional)
+          bat """
+          echo 'sonar.sources=src/main/java' // Replace with path to your source code
+          """
+          
+          // Run SonarCloud analysis using powershell
+          bat 'powershell "mvn sonar:sonar"'
         }
-        always {
-            echo 'always section'
-            // Publish Surefire test results
-            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-        }
+      }
     }
+  }
 }
