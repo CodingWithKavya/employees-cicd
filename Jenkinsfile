@@ -35,7 +35,7 @@ pipeline {
     stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    bat '''mvn clean verify sonar:sonar -Dsonar.projectKey=cicd-pipeline-project -Dsonar.projectName='cicd-pipeline-project' -Dsonar.host.url=http://localhost:9000''' //port 9000 is default for sonar
+                    bat '''mvn clean verify sonar:sonar -Dsonar.projectKey=CI_CD -Dsonar.projectName='CI_CD' -Dsonar.host.url=http://localhost:9000''' //port 9000 is default for sonar
                     echo 'SonarQube Analysis Completed'
                 }
             }
