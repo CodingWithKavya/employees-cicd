@@ -37,9 +37,12 @@ stage('SonarCloud analysis') {
     environment {
         SONAR_ORGANIZATION = 'codingwithkavya'
     }
-    steps {
-        withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') {
-            bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar -Dsonar.organization=${SONAR_ORGANIZATION}"
+steps {
+        script {
+            def scannerHome = tool 'SonarQubeScanner'
+            withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') {
+                bat "${scannerHome}/bin/sonar-scanner -Dsonar.organization=${env.SONAR_ORGANIZATION} -Dsonar.projectKey=codingwithkavya -Dsonar.sources=src -Dsonar.projectBaseDir=. -Dsonar.analysis.mode=preview -Dsonar.github.repository=https://github.com/CodingWithKavya/employees-cicd.git -Dsonar.pullrequest.key=main"
+            }
         }
     }
 }
