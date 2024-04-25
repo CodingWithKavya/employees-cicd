@@ -41,8 +41,8 @@ steps {
         script {
             def scannerHome = tool 'SonarQubeScanner'
             withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') {
-                bat "${scannerHome}/bin/sonar-scanner -Dsonar.organization=${env.SONAR_ORGANIZATION} -Dsonar.projectKey=codingwithkavya -Dsonar.sources=src -Dsonar.projectBaseDir=."
-            }
+                bat "${scannerHome}/bin/sonar-scanner -Dsonar.organization=${env.SONAR_ORGANIZATION} -Dsonar.projectKey=codingwithkavya -Dsonar.sources=src -Dsonar.projectBaseDir=. -Dsonar.github.repository=https://github.com/CodingWithKavya/employees-cicd.git -Dsonar.pullrequest.key=main"
+         }
         }
     }
 }
