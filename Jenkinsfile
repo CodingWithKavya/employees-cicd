@@ -33,13 +33,16 @@ pipeline {
             }
         }
 
-        stage('SonarCloud analysis') {
-            steps {
-                withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') {
-                    bat 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar'
-                }
-            }
+stage('SonarCloud analysis') {
+    environment {
+        SONAR_ORGANIZATION = 'codingwithkavya'
+    }
+    steps {
+        withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') {
+            bat "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar -Dsonar.organization=${SONAR_ORGANIZATION}"
         }
+    }
+}
 
     stage('Copy artifact to EC2') {
             steps {
