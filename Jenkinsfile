@@ -32,21 +32,14 @@ pipeline {
                 echo 'JUnit test Completed'
             }
         }
-
-stage('SonarCloud analysis') {
-    environment {
-        SONAR_ORGANIZATION = 'codingwithkavya'
-    }
-steps {
-        script {
-            def scannerHome = tool 'SonarQubeScanner'
-            withSonarQubeEnv(credentialsId: 'sonarcloud', installationName: 'SonarCloud') {
-                bat "${scannerHome}/bin/sonar-scanner -Dsonar.organization=${env.SONAR_ORGANIZATION} -Dsonar.projectKey=codingwithkavya -Dsonar.sources=src -Dsonar.projectBaseDir=. -Dsonar.github.repository=https://github.com/CodingWithKavya/employees-cicd.git -Dsonar.pullrequest.key=main"
-         }
+    stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    bat '''mvn clean verify sonar:sonar -Dsonar.projectKey=sonar -Dsonar.projectName='CI_CD' -Dsonar.host.url=http://localhost:9000''' //port 9000 is default for sonar
+                    echo 'SonarQube Analysis Completed'
+                }
+            }
         }
-    }
-}
-
     stage('Copy artifact to EC2') {
             steps {
                 sshPublisher(
