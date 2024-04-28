@@ -81,7 +81,7 @@ pipeline {
                                     cleanRemote: false,
                                     excludes: '',
                                     execCommand: '''
-                                        cd /opt/deployment/
+                                        cd /opt/deploy-kavya/
                                         ansible-playbook start_container.yml
                                     ''',
                                     execTimeout: 120000,
